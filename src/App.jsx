@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import './App.css';
+import abi from "./utils/WavePortal.json"
 
 export default function App() {
 
   const [currentAccount, setCurrentAccount] = useState("");
-
+  const contractAddress = "0xF2482AEDB6bfF7Cc73772fCBCeAA9157ff00c287";
+  const contractABI = abi.abi;
+  
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -52,13 +55,41 @@ export default function App() {
     }
   }
 
+  const wave = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+ 
+        let count = await wavePortalContract.getTotalWaves();
+        console.log("Recuperado o número de tchauzinhos...", count.toNumber());
+
+        /*
+        * Executar o aceno a partir do contrato inteligente
+        */
+        const waveTxn = await wavePortalContract.wave();
+        console.log("Minerando...", waveTxn.hash);
+
+        await waveTxn.wait();
+        console.log("Minerado -- ", waveTxn.hash);
+
+        count = await wavePortalContract.getTotalWaves();
+        console.log("Total de tchauzinhos recuperado...", count.toNumber());
+        
+      } else {
+        console.log("Objeto Ethereum não encontrado!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
     checkIfWalletIsConnected();
   }, [])
-
-  const wave = () => {
-    
-  }
 
   return (
     <div className="mainContainer">
